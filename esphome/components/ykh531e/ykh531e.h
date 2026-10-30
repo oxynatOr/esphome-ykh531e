@@ -78,7 +78,7 @@ namespace esphome
                                   {climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL},
                                   {climate::CLIMATE_PRESET_NONE, climate::CLIMATE_PRESET_SLEEP})
       {
-        // Heat mode is automatically supported by ClimateIR base class
+        // Cool/heat support is configured from YAML by the ClimateIR base class
       }
 
       /// Set use of Fahrenheit units
