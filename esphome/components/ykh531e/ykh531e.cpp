@@ -89,7 +89,7 @@ namespace esphome
       }
 
       // byte4: 5 unknown bits and fan speed
-      switch (this->fan_mode.value())
+      switch (this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO))
       {
       case climate::CLIMATE_FAN_LOW:
         ir_message[4] |= YKH531E_FAN_SPEED_LOW << 5;
