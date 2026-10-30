@@ -90,6 +90,20 @@ namespace esphome
       }
 
       // byte4: 5 unknown bits and fan speed
+      // Enforce the protocol constraints and keep the published state consistent
+      if (this->mode == climate::CLIMATE_MODE_AUTO)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_AUTO;
+      }
+      else if (this->mode == climate::CLIMATE_MODE_DRY)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_LOW;
+      }
+      else if (this->mode == climate::CLIMATE_MODE_FAN_ONLY && this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO) == climate::CLIMATE_FAN_AUTO)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_LOW;
+      }
+
       switch (this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO))
       {
       case climate::CLIMATE_FAN_LOW:
