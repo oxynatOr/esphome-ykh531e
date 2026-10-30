@@ -10,7 +10,7 @@ Add to your ESPHome configuration:
 
 ```yaml
 external_components:
-  - source: github://smazurov/esphome-ykh531e
+  - source: github://oxynatOr/esphome-ykh531e
     components: [ykh531e]
 ```
 
@@ -30,6 +30,11 @@ climate:
     supports_cool: true
     use_fahrenheit: true # Optional: use Fahrenheit instead of Celsius
 ```
+
+## Compatibility
+
+Builds against ESPHome 2025.11 and newer. The traits are derived from the `climate_ir` base class, so the component
+does not depend on its internal `supports_*_` members.
 
 ## Features
 
