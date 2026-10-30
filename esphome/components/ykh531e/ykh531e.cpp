@@ -1,5 +1,6 @@
 #include "ykh531e.h"
 #include "esphome/core/log.h"
+#include <cmath>
 
 namespace esphome
 {
@@ -18,7 +19,7 @@ namespace esphome
       {
         return YKH531E_TEMP_MIN - 8;
       }
-      return temperature - 8;
+      return (uint8_t)roundf(temperature - 8);
     }
 
     float decode_temperature_celsius(uint8_t encoded_temperature) { return encoded_temperature + 8.0f; }
@@ -32,7 +33,7 @@ namespace esphome
         temp_f = 90.0f;
       if (temp_f < 60.0f)
         temp_f = 60.0f;
-      return (uint8_t)temp_f + 8; // Apply +8 offset for protocol encoding
+      return (uint8_t)roundf(temp_f) + 8; // Apply +8 offset for protocol encoding
     }
 
     void YKH531EClimate::transmit_state()
