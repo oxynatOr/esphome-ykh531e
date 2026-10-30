@@ -330,33 +330,19 @@ namespace esphome
 
     climate::ClimateTraits YKH531EClimate::traits()
     {
-      auto traits = climate::ClimateTraits();
-      if (this->sensor_ != nullptr) {
-        traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
+      // The base class already handles cool/heat/dry/fan_only, sensors, ranges, fan, swing and presets.
+      // Only the mode set needs adjusting: this unit has AUTO instead of HEAT_COOL.
+      auto traits = climate_ir::ClimateIR::traits();
+
+      climate::ClimateModeMask modes;
+      for (auto mode : {climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT,
+                        climate::CLIMATE_MODE_DRY, climate::CLIMATE_MODE_FAN_ONLY})
+      {
+        if (traits.supports_mode(mode))
+          modes.insert(mode);
       }
-      traits.set_visual_min_temperature(YKH531E_TEMP_MIN);
-      traits.set_visual_max_temperature(YKH531E_TEMP_MAX);
-      traits.set_visual_temperature_step(YKH531E_TEMP_INC);
-
-      // Always support these modes
-      traits.set_supported_modes({climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_AUTO});
-      
-      // Always add cool, dry, and fan_only as the hardware supports them
-      traits.add_supported_mode(climate::CLIMATE_MODE_COOL);
-      traits.add_supported_mode(climate::CLIMATE_MODE_DRY);
-      traits.add_supported_mode(climate::CLIMATE_MODE_FAN_ONLY);
-      
-      // Only add heat if configured in YAML
-      if (this->supports_heat_)
-        traits.add_supported_mode(climate::CLIMATE_MODE_HEAT);
-
-      traits.set_supported_fan_modes(
-          {climate::CLIMATE_FAN_AUTO, climate::CLIMATE_FAN_LOW, climate::CLIMATE_FAN_MEDIUM,
-           climate::CLIMATE_FAN_HIGH});
-
-      traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL});
-
-      traits.set_supported_presets({climate::CLIMATE_PRESET_NONE, climate::CLIMATE_PRESET_SLEEP});
+      modes.insert(climate::CLIMATE_MODE_AUTO);
+      traits.set_supported_modes(modes);
 
       return traits;
     }
