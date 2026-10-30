@@ -1,5 +1,6 @@
 #include "ykh531e.h"
 #include "esphome/core/log.h"
+#include <cmath>
 
 namespace esphome
 {
@@ -18,7 +19,7 @@ namespace esphome
       {
         return YKH531E_TEMP_MIN - 8;
       }
-      return temperature - 8;
+      return (uint8_t)roundf(temperature - 8);
     }
 
     float decode_temperature_celsius(uint8_t encoded_temperature) { return encoded_temperature + 8.0f; }
@@ -32,7 +33,7 @@ namespace esphome
         temp_f = 90.0f;
       if (temp_f < 60.0f)
         temp_f = 60.0f;
-      return (uint8_t)temp_f + 8; // Apply +8 offset for protocol encoding
+      return (uint8_t)roundf(temp_f) + 8; // Apply +8 offset for protocol encoding
     }
 
     void YKH531EClimate::transmit_state()
@@ -66,30 +67,43 @@ namespace esphome
       {
         if (this->transmit_fahrenheit_)
         {
-          ESP_LOGD(TAG, "Transmitting in Fahrenheit mode");
+          ESP_LOGV(TAG, "Transmitting in Fahrenheit mode");
           // Fahrenheit mode - only use Fahrenheit field, leave Celsius field empty
 
           // Set Fahrenheit temperature (bits 81-87 = byte 10, bits 1-7)
           uint8_t temp_f_encoded = encode_temperature_fahrenheit(this->target_temperature);
-          float temp_f = this->target_temperature * 9.0 / 5.0 + 32.0;
-          ESP_LOGD(TAG, "Target %.1f°C = %.1f°F, encoded as %d", this->target_temperature, temp_f, temp_f_encoded);
+          ESP_LOGV(TAG, "Target %.1f°C encoded as %d", this->target_temperature, temp_f_encoded);
           ir_message[10] |= (temp_f_encoded << 1) & 0b11111110;
         }
         else
         {
-          ESP_LOGD(TAG, "Transmitting in Celsius mode");
+          ESP_LOGV(TAG, "Transmitting in Celsius mode");
           // Celsius mode - use Celsius field only
           ir_message[1] |= encode_temperature_celsius(this->target_temperature) << 3;
         }
       }
       else
       {
-        ESP_LOGD(TAG, "Mode %s doesn't use temperature - skipping temperature encoding", 
+        ESP_LOGV(TAG, "Mode %s doesn't use temperature - skipping temperature encoding", 
                  this->mode == climate::CLIMATE_MODE_FAN_ONLY ? "FAN_ONLY" : "DRY");
       }
 
       // byte4: 5 unknown bits and fan speed
-      switch (this->fan_mode.value())
+      // Enforce the protocol constraints and keep the published state consistent
+      if (this->mode == climate::CLIMATE_MODE_AUTO)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_AUTO;
+      }
+      else if (this->mode == climate::CLIMATE_MODE_DRY)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_LOW;
+      }
+      else if (this->mode == climate::CLIMATE_MODE_FAN_ONLY && this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO) == climate::CLIMATE_FAN_AUTO)
+      {
+        this->fan_mode = climate::CLIMATE_FAN_LOW;
+      }
+
+      switch (this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO))
       {
       case climate::CLIMATE_FAN_LOW:
         ir_message[4] |= YKH531E_FAN_SPEED_LOW << 5;
@@ -193,7 +207,7 @@ namespace esphome
         ESP_LOGV(TAG, "Header fail");
         return false;
       }
-      ESP_LOGD(TAG, "Header received");
+      ESP_LOGV(TAG, "Header received");
 
       uint8_t ir_message[13] = {0};
       for (int i = 0; i < 13; i++)
