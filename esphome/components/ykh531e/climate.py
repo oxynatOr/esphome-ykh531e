@@ -4,7 +4,7 @@ import esphome.config_validation as cv
 from esphome.const import CONF_USE_FAHRENHEIT
 
 AUTO_LOAD = ["climate_ir"]
-CODEOWNERS = ["@smazurov"]
+CODEOWNERS = ["@oxynatOr"]
 
 ykh531e_ns = cg.esphome_ns.namespace("ykh531e")
 YKH531EClimate = ykh531e_ns.class_("YKH531EClimate", climate_ir.ClimateIR)
